@@ -37,7 +37,7 @@ AlFehrestNS.Forms.Multi = function(options) {
     function getAllValues() {
         var values = [];
         for(var i=0;i<mInputs.length;i++){
-            valSet = {};
+            var valSet = {};
             for(var idx in mInputs[i]){
                 valSet[idx] = mInputs[i][idx].val();
             }

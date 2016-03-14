@@ -26,11 +26,11 @@
         <td><a target="_blank" href="<%=link%>"><%=name%></a></td>
     </tr>
 </script>
-	<script id="tmpl_outgoing_relationships" type="text/html">	<li>
+	<script id="tmpl_incoming_relationships" type="text/html">	<li>
         <a href="form.html?ctrl=<%=ctrl%>&id=<%=entityId%>">
-            <%=entityName%> | <%=entityType%>
+            <%=entityName%> | <!entityType!>
         </a> 
-        &#8592; [<%=relationship%>] &#8592; <%=thisName%>
+        &#8592; [<!relationship!>] &#8592; <%=thisName%>
     </li>
 </script>
 	<!-- /expand_section -->
@@ -62,10 +62,12 @@
 	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.picker.js"></script>
 	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.picker.lang.js"></script>
 
+	<script type="text/javascript" src="./assets/app/js/language.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/core/forms.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/core/form.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/core/formset.js"></script>
-    
+	<script>AlFehrestNS.loadLanguage('ar');</script>
+
 	<!-- expand_section ["assets/app/js/form/types/*.js"] -->
 	<script type="text/javascript" src="./assets/app/js/form/types/base.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/types/date.js"></script>
@@ -73,9 +75,11 @@
 	<script type="text/javascript" src="./assets/app/js/form/types/list.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/types/multi.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/types/multil.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/readonly.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/types/textarea.js"></script>
 	<script type="text/javascript" src="./assets/app/js/form/types/textfield.js"></script>
 	<!-- /expand_section -->
+
 
 
 <script type="text/javascript">
@@ -92,18 +96,19 @@
 		return results == null ? null : results[1];
 	}
 
-	function loadIncomingRelationshipBlock(thisName, data){
+	function loadIncomingRelationshipBlock(thisName, data, relLookup){
 		$("#incoming_relationship_block").html('');
 		for(var i=0;i<data.length;i++){
+			var entityName = relLookup[data[i].firstEntityType].secondEntityId.elements[data[i].firstEntityId];
 			var viewObject = {
 				thisName: thisName,
 				entityId: data[i].firstEntityId,
-				entityName: data[i].firstEntityType,
+				entityName: entityName,
 				ctrl: data[i].firstEntityType,
-				relationship: data[i].relationship,
-				entityType: data[i].type
-			}
-			$("#incoming_relationship_block").append(tmpl("relationship", viewObject));
+				relationship: data[i].type,
+				entityType: data[i].firstEntityType
+			};
+			$("#incoming_relationship_block").append(tmpl("tmpl_incoming_relationships", viewObject));
 		}
 
 	}
@@ -118,14 +123,20 @@
 
 	function loadOutgoingRelationshipBlock(template, data){
 
-        var propset = {}
+        var propset = {};
 		for(var idx1 in template){
-            for(var idx2 in template[idx1].types){            
-                template[idx1].types[idx2].fields['secondEntityId'] = template[idx1].secondEntityId;
+            for(var idx2 in template[idx1].types) {
+				//Rearrange fields, VERY UGLY
+				var newObjectFieldsList = {};
+				newObjectFieldsList['secondEntityId'] =  template[idx1].secondEntityId;
+				for(var idx3 in template[idx1].types[idx2].fields) {
+					newObjectFieldsList[idx3] =  template[idx1].types[idx2]['fields'][idx3];
+				}
+                template[idx1].types[idx2].fields = newObjectFieldsList;
             }
 		}
         
-        console.log(template);
+
 		relationshipFormset = new AlFehrestNS.Forms.FormSet({
 			domContainer: $('#outgoing_relationship_block'),
 			formTemplates: template,
@@ -134,24 +145,7 @@
 			"listText": "نوع العلاقة",
 			"titleText": "العلاقات",
 			'delete': function(type, data){
-				console.log(type, data);
-				var deferred = new $.Deferred();
-
-				setTimeout(function() {
-					deferred.resolve();
-				}, 5000);
-
-				return deferred.promise();
-			},
-
-			'save': function(type, data){
-				console.log(type, data);
-				var deferred = new $.Deferred();
-				setTimeout(function(){
-					deferred.resolve();
-				}, 5000);
-
-				return deferred.promise();
+				return new $.Deferred().resolve().promise();
 			}
 		});
         
@@ -189,10 +183,12 @@
 		$.when.apply($, requests).done(function(template, data) {
 			if(loadedEntityId){
 				data = data[0];
-                console.log(template[0]);
-				loadEntityBlock(template[0].entity, data.entity);
-				loadOutgoingRelationshipBlock(template[0].relationships, data.relationships);
-				loadIncomingRelationshipBlock(data.name, data.relationships['incoming']);
+				template = template[0];
+				loadEntityBlock(template.entity, data.entity);
+				loadOutgoingRelationshipBlock(template.relationships, data.relationships);
+				loadIncomingRelationshipBlock(
+						data.entity.name || data.entity.title, data.relationships['incoming'], template.relationships
+				);
 			} else {
 				loadEntityBlock(template.entity, null);
 				loadOutgoingRelationshipBlock(template.relationships, null);
@@ -219,7 +215,7 @@
                 },
 				data: JSON.stringify(entity),
 				contentType: "application/json",
-				dataType: "json",
+				dataType: "json"
 			}).done(function( msg ) {
 				alert( "Data Saved: " + msg );
 			});

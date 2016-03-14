@@ -17,11 +17,11 @@
         <td><a target="_blank" href="<%=link%>"><%=name%></a></td>
     </tr>
 </script>
-	<script id="tmpl_outgoing_relationships" type="text/html">	<li>
+	<script id="tmpl_incoming_relationships" type="text/html">	<li>
         <a href="form.html?ctrl=<%=ctrl%>&id=<%=entityId%>">
-            <%=entityName%> | <%=entityType%>
+            <%=entityName%> | <!entityType!>
         </a> 
-        &#8592; [<%=relationship%>] &#8592; <%=thisName%>
+        &#8592; [<!relationship!>] &#8592; <%=thisName%>
     </li>
 </script>
 	<!-- /expand_section -->

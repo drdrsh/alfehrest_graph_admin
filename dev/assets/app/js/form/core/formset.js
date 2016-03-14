@@ -59,7 +59,8 @@ AlFehrestNS.Forms.FormSet = function(options) {
             currentNode[idx] = {
                 label: currentObject[idx].label,
             };
-            $list.append( $("<option value='"+idx+"'>" + currentObject[idx].label + "</option>") );
+            var lbl = currentObject[idx].label || idx;
+            $list.append( $("<option value='"+idx+"'>" + _(lbl) + "</option>") );
 
             $newList = $("<select>")
                         .attr('data-level', 1)
@@ -68,6 +69,7 @@ AlFehrestNS.Forms.FormSet = function(options) {
                         .addClass("nested-level-" + (level+1))
                         .addClass("parent-" + idx + "-" +  (level+1))
                         .change(OnNestedListChanage)
+                        .hide();
 
             maxNestedLevel = level + 1;
             if(partsArray.length != 1) {
@@ -130,7 +132,6 @@ AlFehrestNS.Forms.FormSet = function(options) {
     
     function onAddClicked(){
         
-        console.log(mOptions);
         var selection = getCurrentNestedSelection();
         if(selection.length  != 2){
             return;
@@ -138,7 +139,7 @@ AlFehrestNS.Forms.FormSet = function(options) {
         selection = selection.join('.');
         
         addEntry(selection, null);
-            
+
     }
     
     function disableForm(id){
@@ -192,13 +193,20 @@ AlFehrestNS.Forms.FormSet = function(options) {
         
         var rand = AlFehrestNS.Forms.getRandomName();
         var container = $("<div />").addClass("nested-form").attr('id', 'nested_form_' + rand);
-        var elements = getFormFromType(type);
-        elements.type = {
+        var elms = getFormFromType(type);
+        delete elms.type;
+
+        var elements = {};
+        elements['type'] = {
             name: "type",
-            type: "HiddenField",
+            type: "ReadOnly",
             value: type
         };
-        
+        //Assumes objects have ordered keys, bad assumption but works, I am lazy!
+        for(var idx in elms) {
+            elements[idx] = elms[idx];
+        }
+
         mForms[rand] = {
             'type': type,
             'form': new AlFehrestNS.Forms.Form({elements: elements})
@@ -213,14 +221,7 @@ AlFehrestNS.Forms.FormSet = function(options) {
             .attr('data-id', rand)
             .html('Delete')
             .click(onDeleteClicked)
-        )
-        container.append(
-            $('<button />')
-            .addClass('saveBtn')
-            .attr('data-id', rand)
-            .html('Save')
-            .click(onSaveClicked)
-        )
+        );
         mDomFormsContainer.append(container);
     }
     

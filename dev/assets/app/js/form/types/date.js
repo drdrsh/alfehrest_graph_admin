@@ -73,7 +73,7 @@ AlFehrestNS.Forms.Date = function(options) {
 
         onModeChanged();
     
-    };
+    }
     
     function setValue(val) {
         var calendar = $.calendars.instance('islamic');
@@ -82,7 +82,7 @@ AlFehrestNS.Forms.Date = function(options) {
         var first_date = val.first_date;
         var second_date = val.second_date;
 
-        if(first_date != ""){
+        if(first_date){
             try {
                 first_date = calendar.formatDate(mDisplayFormat, calendar.fromJD(first_date));
             } catch(e) {
@@ -90,7 +90,7 @@ AlFehrestNS.Forms.Date = function(options) {
             }
         }
 
-        if(second_date != ""){
+        if(second_date){
             try {
                 second_date = calendar.formatDate(mDisplayFormat, calendar.fromJD(second_date));
             } catch(e) {
