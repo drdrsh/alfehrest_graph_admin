@@ -1,0 +1,31 @@
+{
+  "name": "alfehrest_graph_frontend",
+  "homepage": "https://github.com/drdrsh/alfehrest_graph_frontend",
+  "readme": "README.md",
+  "authors": [
+    "drdrsh <mostafa.mohmmed@gmail.com>"
+  ],
+  "description": "AlFehrest Graph Administrator frontend",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-bower-install-simple": "^1.2.1",
+    "grunt-bowercopy": "^1.2.4",
+    "grunt-contrib-concat": "^1.0.0",
+    "grunt-contrib-jshint": "~1.0.0",
+    "grunt-contrib-uglify": "^0.11.0",
+    "grunt-expand-in-place": "^0.1.0",
+    "grunt-serve": "^0.1.6"
+  },
+  "scripts": {}
+}

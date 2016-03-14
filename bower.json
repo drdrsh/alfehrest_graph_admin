@@ -1,0 +1,10 @@
+{
+  "name": "alfehrest-graph-admin-frontend",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "^2.2.1",
+    "jq-calendars": "https://github.com/drdrsh/calendars.git#406e8dcc97b99900a27ed3b6babf29d6f3390f5f",
+    "jquery-ui": "^1.11.4"
+  },
+  "private": true
+}

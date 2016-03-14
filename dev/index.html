@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title></title>
+        <link rel="stylesheet" type="text/css" href="assets/app/css/frontend.css" />
+	</head>
+    <body>
+		<select id="entity_types"></select>
+
+		<table id="entity_table"></table>
+
+		<!-- expand_section ["assets/app/tmpl/**/*.tmpl"] -->
+	<script id="tmpl_entity_list_item" type="text/html">    <tr>
+        <td><%=id%></td>
+        <td><%=entityType%></td>
+        <td><a target="_blank" href="<%=link%>"><%=name%></a></td>
+    </tr>
+</script>
+	<script id="tmpl_outgoing_relationships" type="text/html">	<li>
+        <a href="form.html?ctrl=<%=ctrl%>&id=<%=entityId%>">
+            <%=entityName%> | <%=entityType%>
+        </a> 
+        &#8592; [<%=relationship%>] &#8592; <%=thisName%>
+    </li>
+</script>
+	<!-- /expand_section -->
+
+       
+        <script type="text/javascript">var AlFehrestNS = {}</script>
+		<script type="text/javascript" src="./assets/lib/jquery/js/jquery.js"></script>
+		<script type="text/javascript" src="./assets/app/js/template.js"></script>
+        <script type="text/javascript">
+		$(document).ready(function(){
+
+			function onSelectedEntityChange() {
+				var selectedController = $(this).val().toLowerCase();
+				$.ajax({
+                    url: "http://localhost:8080/api/" + selectedController + "/",
+                    headers: {
+                        "Content-language": "ar"
+                    }
+                })
+                .done(function(data){
+                    $("#entity_table").html('');
+
+                    for(var i=0;i<data.length;i++){
+                        var viewObject = {
+                            "id" : data[i].id?data[i].id:0,
+                            "link" : "./form.html?ctrl="+selectedController+"&id=" + (data[i].id?data[i].id:0),
+                            "name" : data[i].name,
+                            "entityType" : data[i].entity_type
+                        };
+                        $("#entity_table").append(tmpl("tmpl_entity_list_item", viewObject));
+                    }
+                })
+                .fail(function(){
+
+                });
+			}
+
+
+			AlFehrestNS.EntityTypes = ['person', 'event', 'place', 'transcript', 'tribe'];
+			for(var i=0;i<AlFehrestNS.EntityTypes.length;i++) {
+				$('#entity_types').append(
+						$('<option></option>')
+								.html(AlFehrestNS.EntityTypes[i])
+								.val(AlFehrestNS.EntityTypes[i])
+				)
+			}
+
+			$('#entity_types').change(onSelectedEntityChange);
+		});
+		</script>
+	</body>
+</html>

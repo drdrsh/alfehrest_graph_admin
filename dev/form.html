@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="./assets/lib/jquery-calendars/css/jquery.calendars.picker.css" />
+	<!-- expand_section ["assets/app/css/**/*.css"] -->
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/base.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/date.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/general.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/hiddenfield.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/list.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/multi.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/multil.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/textarea.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/form/textfield.css" />
+	<link rel="stylesheet" type="text/css" href="./assets/app/css/frontend.css" />
+	<!-- /expand_section -->
+</head>
+<body>
+
+	<!-- expand_section ["assets/app/tmpl/**/*.tmpl"] -->
+	<script id="tmpl_entity_list_item" type="text/html">    <tr>
+        <td><%=id%></td>
+        <td><%=entityType%></td>
+        <td><a target="_blank" href="<%=link%>"><%=name%></a></td>
+    </tr>
+</script>
+	<script id="tmpl_outgoing_relationships" type="text/html">	<li>
+        <a href="form.html?ctrl=<%=ctrl%>&id=<%=entityId%>">
+            <%=entityName%> | <%=entityType%>
+        </a> 
+        &#8592; [<%=relationship%>] &#8592; <%=thisName%>
+    </li>
+</script>
+	<!-- /expand_section -->
+
+
+	<button id="save">Save All</button>
+
+	<div id="entity_block"></div>
+
+	<h2>علاقات راحلة</h2>
+	<div id="outgoing_relationship_block"></div>
+
+	<h2>علاقات آتية</h2>
+	<ul id="incoming_relationship_block"></ul>
+
+	<script>var AlFehrestNS = {};</script>
+
+	<script type="text/javascript" src="./assets/lib/jquery/js/jquery.js"></script>
+	<script type="text/javascript" src="./assets/app/js/template.js"></script>
+
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.plugin.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.all.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.lang.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.islamic.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.julian.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.islamic-ar.js"></script>
+
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.picker.js"></script>
+	<script type="text/javascript" src="./assets/lib/jquery-calendars/js/jquery.calendars.picker.lang.js"></script>
+
+	<script type="text/javascript" src="./assets/app/js/form/core/forms.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/core/form.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/core/formset.js"></script>
+    
+	<!-- expand_section ["assets/app/js/form/types/*.js"] -->
+	<script type="text/javascript" src="./assets/app/js/form/types/base.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/date.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/hiddenfield.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/list.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/multi.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/multil.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/textarea.js"></script>
+	<script type="text/javascript" src="./assets/app/js/form/types/textfield.js"></script>
+	<!-- /expand_section -->
+
+
+<script type="text/javascript">
+	var relationshipFormset = null;
+	var entityForm = null;
+	var loadedEntityId = null;
+
+	function gup( name, url ) {
+		if (!url) url = location.href;
+		name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+		var regexS = "[\\?&]"+name+"=([^&#]*)";
+		var regex = new RegExp( regexS );
+		var results = regex.exec( url );
+		return results == null ? null : results[1];
+	}
+
+	function loadIncomingRelationshipBlock(thisName, data){
+		$("#incoming_relationship_block").html('');
+		for(var i=0;i<data.length;i++){
+			var viewObject = {
+				thisName: thisName,
+				entityId: data[i].firstEntityId,
+				entityName: data[i].firstEntityType,
+				ctrl: data[i].firstEntityType,
+				relationship: data[i].relationship,
+				entityType: data[i].type
+			}
+			$("#incoming_relationship_block").append(tmpl("relationship", viewObject));
+		}
+
+	}
+	function loadEntityBlock(template, data) {
+		entityForm = new AlFehrestNS.Forms.Form({
+			domContainer: $('#entity_block'),
+			elements: template,
+		});
+		entityForm.append($('#entity_block'));
+		entityForm.setData(data);
+	}
+
+	function loadOutgoingRelationshipBlock(template, data){
+
+        var propset = {}
+		for(var idx1 in template){
+            for(var idx2 in template[idx1].types){            
+                template[idx1].types[idx2].fields['secondEntityId'] = template[idx1].secondEntityId;
+            }
+		}
+        
+        console.log(template);
+		relationshipFormset = new AlFehrestNS.Forms.FormSet({
+			domContainer: $('#outgoing_relationship_block'),
+			formTemplates: template,
+            "selectPath": "*.types",
+			"buttonText": "أضف",
+			"listText": "نوع العلاقة",
+			"titleText": "العلاقات",
+			'delete': function(type, data){
+				console.log(type, data);
+				var deferred = new $.Deferred();
+
+				setTimeout(function() {
+					deferred.resolve();
+				}, 5000);
+
+				return deferred.promise();
+			},
+
+			'save': function(type, data){
+				console.log(type, data);
+				var deferred = new $.Deferred();
+				setTimeout(function(){
+					deferred.resolve();
+				}, 5000);
+
+				return deferred.promise();
+			}
+		});
+        
+        $('#outgoing_relationship_block button:first-child').click();
+		if(data) {
+			relationshipFormset.setData(data.outgoing);
+		}
+	}
+
+	$(document).ready(function() {
+		loadedEntityId = gup('id', window.location);
+		var ctrl = gup('ctrl', window.location);
+		var entityType = ctrl;
+
+		var requests = [
+            $.ajax({
+                url: "http://localhost:8080/api/" + ctrl + "/schema/",
+                headers: {
+                    "Content-language": "ar"
+                }
+            })
+        ];
+
+		if(loadedEntityId){
+			requests.push(
+                $.ajax({
+                    url: "http://localhost:8080/api/" + ctrl + "/" + loadedEntityId + "/",
+                    headers: {
+                        "Content-language": "ar"
+                    }
+                })
+            );
+		}
+
+		$.when.apply($, requests).done(function(template, data) {
+			if(loadedEntityId){
+				data = data[0];
+                console.log(template[0]);
+				loadEntityBlock(template[0].entity, data.entity);
+				loadOutgoingRelationshipBlock(template[0].relationships, data.relationships);
+				loadIncomingRelationshipBlock(data.name, data.relationships['incoming']);
+			} else {
+				loadEntityBlock(template.entity, null);
+				loadOutgoingRelationshipBlock(template.relationships, null);
+			}
+		});
+
+		$('#save').click(function() {
+
+			var entity = entityForm.getData();
+			entity.relationships = relationshipFormset.getData();
+            
+            var urlParts = [ctrl];
+            var method = 'POST';
+            if(loadedEntityId){
+                method = 'PUT';
+                urlParts.push(loadedEntityId);
+            }
+            
+			$.ajax({
+				method: method,
+                url: "http://localhost:8080/api/" + urlParts.join('/'),
+                headers: {
+                    "Content-language": "ar"
+                },
+				data: JSON.stringify(entity),
+				contentType: "application/json",
+				dataType: "json",
+			}).done(function( msg ) {
+				alert( "Data Saved: " + msg );
+			});
+
+		});
+
+	});
+
+</script>
+
+
+</body>
+</html>

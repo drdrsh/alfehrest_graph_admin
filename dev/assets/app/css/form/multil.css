@@ -1,0 +1,8 @@
+/**/
+
+.form-multil .form-textfield label {
+    display: none;
+}
+.form-multil .form-textfield {
+    display:inline;
+}
